@@ -1,0 +1,82 @@
+# ============================================================
+#  configs/config.yaml
+#  All hyperparameters for Hybrid MSW Classification Model
+# ============================================================
+
+# ----- Dataset -----
+data:
+  data_dir: "data/raw"
+  train_split: 0.70
+  val_split: 0.10
+  test_split: 0.20
+  image_size: [224, 224]
+  num_classes: 2
+  class_names: ["Organic", "Recyclable"]
+  exclude_p_mode: true        # Exclude palette-mode images
+
+# ----- Augmentation -----
+augmentation:
+  rotation_range: 30
+  width_shift_range: 0.2
+  height_shift_range: 0.2
+  shear_range: 0.15
+  zoom_range: 0.2
+  horizontal_flip: true
+  brightness_range: [0.8, 1.2]
+  fill_mode: "nearest"
+
+# ----- AE-DC Block -----
+ae_dc:
+  dilation_rates: [1, 2, 4, 8]
+  filters: 64
+  kernel_size: 3
+  use_pyramid_pooling: true
+  attention_type: "self"       # "self" or "channel"
+
+# ----- Residual GRU -----
+residual_gru:
+  units: 128
+  num_layers: 2
+  dropout: 0.3
+  identity_alpha: 0.2         # Range: 0.0 to 0.3
+  use_batch_norm: true
+  activation: "prelu"
+
+# ----- ELM Classifier -----
+elm:
+  hidden_units: 256
+  regularization_c: 1.0       # Moore-Penrose regularization
+  activation: "sigmoid"
+
+# ----- Training -----
+training:
+  epochs: 150
+  batch_size: 32
+  learning_rate: 0.0001
+  weight_decay: 1.0e-5
+  dropout_rate: 0.3
+  optimizer: "arwdo"          # "arwdo" | "adam" | "sgd"
+  loss: "categorical_crossentropy"
+  early_stopping_patience: 15
+  checkpoint_dir: "results/checkpoints"
+  log_dir: "results/logs"
+
+# ----- ARWDO Optimizer -----
+arwdo:
+  population_size: 30
+  max_iterations: 100
+  convergence_threshold: 1.0e-4
+  max_flow_number: 5
+  phi_range: [-1.0, 1.0]     # Descent operator random range
+  # Hyperparameter search bounds
+  search_space:
+    learning_rate: [1.0e-5, 1.0e-2]
+    hidden_units:  [64, 512]
+    batch_size:    [16, 64]
+    dropout:       [0.1, 0.5]
+    weight_decay:  [1.0e-6, 1.0e-3]
+
+# ----- Evaluation -----
+evaluation:
+  metrics: ["accuracy", "precision", "recall", "specificity", "f1_score", "auc"]
+  n_runs: 5                   # Repeat experiments for statistical reliability
